@@ -5,7 +5,7 @@ from pathlib import Path
 
 def main():
     # 1) Chemin du dossier contenant tes factures
-    folder = Path(r"C:\Users\TomCHARON\OneDrive - MEOGROUP\Documents\App\extract_test\extract_test\factures")
+    folder = Path(r"C:\Users\TomCHARON\OneDrive - MEOGROUP\Documents\App\bill_extractor\factures")
     if not folder.exists():
         print(f"❌ Le dossier n'existe pas : {folder}")
         return
