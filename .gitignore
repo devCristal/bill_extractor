@@ -1,0 +1,45 @@
+# Ignorer les fichiers de configuration environnementale
+.env
+
+# Ignorer les dossiers de cache Python
+__pycache__/
+*.py[cod]
+factures
+
+# Ignorer les fichiers de log
+*.log
+
+# Ignorer les environnements virtuels (venv, pipenv, etc.)
+venv/
+env/
+.pipenv/
+*.venv
+*.virtualenv
+
+# Ignorer les fichiers de base de données SQLite
+*.sqlite3
+
+# Ignorer les fichiers de configuration IDE (comme VSCode, PyCharm, etc.)
+.vscode/
+.idea/
+
+# Ignorer les fichiers de tests unitaires
+.coverage
+.tox/
+.nox/
+.pytest_cache/
+*.cover
+*.coverage.*
+
+# Ignorer les fichiers de packages
+*.egg-info/
+dist/
+build/
+
+# Ignorer les fichiers spécifiques à MacOS
+.DS_Store
+
+# Ignore Excel files
+*.xls
+*.xlsx
+*.pdf
