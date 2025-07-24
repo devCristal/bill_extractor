@@ -29,10 +29,12 @@ def parse_sce(text: str) -> dict:
         data["date"] = to_fr_date(m_due.group(1))
 
     # Nom du destinataire
+    # On cherche la ligne commençant par le nom, suivie de " / Page" (avec ou sans espace avant/après) :
     m_recv = re.search(
-        r"^([A-Z0-9 &\-\.'\,]+)\s*/\s*Page\b",
-        text, re.MULTILINE
-    )
+        r"^([A-Z0-9 &\-\.'\,]+?)\s*/\s*Page",
+        text,
+        re.MULTILINE | re.IGNORECASE
+     )
     if m_recv:
         data["receiver_name"] = m_recv.group(1).strip()
 
