@@ -4,12 +4,17 @@ from datetime import datetime
 def parse_sce(text: str) -> dict:
     """
     Extrait des factures Southern California Edison :
-      • supplier (fixe)
-      • date d'émission (après 'Due by'), au format DD/MM/YYYY
-      • receiver_name     : nom du destinataire (ligne avant '/ Page')
-      • receiver_address  : adresse du destinataire (lignes après 'Due by')
-      • invoice_number    : identifiant de la facture (STMT…), ou compte client
-      • energy            : 'gas' ou 'electricity' si présent dans le texte
+      • supplier           : "SouthernCaliforniaEdison"
+      • date               : date d'émission (après 'Due by'), format DD/MM/YYYY
+      • receiver_name      : nom du destinataire (ligne avant '/ Page')
+      • receiver_address   : adresse du destinataire (lignes après 'Due by')
+      • invoice_number     : identifiant de la facture (STMT…), ou compte client
+      • energy             : 'gas' ou 'electricity'
+      • meter_point_id     : numéro du meter (via Service address) ou fallback Service account
+      • service_address    : adresse de service (via Service address)
+      • volume_kwh         : volume total consommé ce mois (kWh)
+      • detailed_volume    : dict des volumes par période (mid_peak, off_peak…)
+      • dso                : opérateur (DSO)
     """
     data = {
         "supplier": "SouthernCaliforniaEdison",
@@ -25,42 +30,31 @@ def parse_sce(text: str) -> dict:
         dt = datetime.strptime(us_date, fmt)
         return dt.strftime("%d/%m/%Y")
 
-    # 1) Date et adresse
-    m_due = re.search(
-        r"Due\s+by[^\n]*?([0-9]{1,2}/[0-9]{1,2}/[0-9]{2,4})",
-        text,
-        re.IGNORECASE
-    )
+    # 1) Date et adresse destinataire
+    m_due = re.search(r"Due\s+by[^\n]*?([0-9]{1,2}/[0-9]{1,2}/[0-9]{2,4})",
+                      text, re.IGNORECASE)
     if m_due:
         data["date"] = to_fr_date(m_due.group(1))
         tail = text[m_due.end():].splitlines()
         lines = [l.strip() for l in tail if l.strip()]
         for i, ln in enumerate(lines):
             if re.match(r"^\d", ln):
-                street = ln
-                city = lines[i+1] if i+1 < len(lines) else ""
-                data["receiver_address"] = f"{street}, {city}".strip(", ")
+                next_line = lines[i+1] if i+1 < len(lines) else ""
+                data["receiver_address"] = f"{ln}, {next_line}".strip(", ")
                 break
 
-    # 2) Nom du destinataire
-    m_recv = re.search(
-        r"^([A-Z0-9 &\-\.'\,]+?)\s*/\s*Page",
-        text,
-        re.MULTILINE | re.IGNORECASE
-    )
+    # 2) Nom destinataire
+    m_recv = re.search(r"^([A-Z0-9 &\-\.'\,]+?)\s*/\s*Page",
+                       text, re.MULTILINE | re.IGNORECASE)
     if m_recv:
         data["receiver_name"] = m_recv.group(1).strip()
 
-    # 3) Invoice number (STMT… avec ou sans espace avant suffixe P, ou fallback compte client)
-    m_stmt = re.search(
-        r"\b(STMT\s*[0-9]{6,8}(?:\s*P[0-9]+)?)\b",
-        text,
-        re.IGNORECASE
-    )
+    # 3) Invoice number
+    m_stmt = re.search(r"\b(STMT\s*[0-9]{6,8}(?:\s*P[0-9]+)?)\b",
+                       text, re.IGNORECASE)
     if m_stmt:
         data["invoice_number"] = m_stmt.group(1).strip()
     else:
-        # fallback : numéro de compte client (12 chiffres)
         m_acc = re.search(r"\b(\d{12})\b", text)
         if m_acc:
             data["invoice_number"] = m_acc.group(1)
