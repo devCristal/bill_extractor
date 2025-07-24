@@ -26,15 +26,25 @@ def extract_text_with_ocr(pdf_path: Path) -> str:
         pages_txt.append(pytesseract.image_to_string(img, lang="fra+eng"))
     return "\n\n".join(pages_txt)
 
+import re
+
 def detect_supplier(text: str) -> str | None:
     low = text.lower()
-    if "edf" in low:
+
+    # 1) Southern California Edison (mot complet ou acronyme SCE)
+    if "southern california edison" in low or re.search(r"\bsce\b", low):
+        return "SouthernCaliforniaEdison"
+
+    # 2) EDF (mot entier)
+    if re.search(r"\bedf\b", low):
         return "EDF"
+
+    # 3) TotalEnergie
     if "totalenergie" in low or "total energie" in low or "totalenergies" in low:
         return "TotalEnergie"
-    if "southern california edison" in low:
-        return "SouthernCaliforniaEdison"
+
     return None
+
 
 def main():
     folder = Path(r"C:\Users\TomCHARON\OneDrive - MEOGROUP\Documents\App\bill_extractor\factures")
